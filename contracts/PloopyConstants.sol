@@ -22,7 +22,7 @@ contract PloopyConstants {
   ICERC20 internal constant lUSDC = ICERC20(0xeF25968ECC2f13b6272a37312a409D429DEF70AB);
   ICERC20 internal constant lPLVGLP = ICERC20(0xDFD276A2460eDb150DE2622f2D947EEa21C3EE48);
   IPriceOracleProxyETH internal constant PRICE_ORACLE =
-    IPriceOracleProxyETH(0x569dd9Bc87c7eB5De658c912d21ccB661aA249bD);
+    IPriceOracleProxyETH(0xcC3D0d211dF6157cb94b5AaCfD55D41acd3a9A7A);
 
   uint256 public constant DIVISOR = 1e4;
   uint16 public constant MAX_LEVERAGE = 30_000; // in {DIVISOR} terms. E.g. 30_000 = 3.0;
