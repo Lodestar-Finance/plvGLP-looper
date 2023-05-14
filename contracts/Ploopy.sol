@@ -12,6 +12,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     USDC.approve(address(REWARD_ROUTER_V2), type(uint256).max);
     USDC.approve(address(GLP), type(uint256).max);
     USDC.approve(address(VAULT), type(uint256).max);
+    USDC.approve(address(GLP_MANAGER), type(uint256).max);
     // approve GlpDepositor to spend GLP for minting plvGLP
     sGLP.approve(address(GLP_DEPOSITOR), type(uint256).max);
     GLP.approve(address(GLP_DEPOSITOR), type(uint256).max);
@@ -77,8 +78,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     if (msg.sender != address(BALANCER_VAULT)) revert UNAUTHORIZED('!vault');
 
     // additional checks?
-    // // Check the balance before the loan is received
-    // uint256 initialBalance = USDC.balanceOf(address(this));
 
     UserData memory data = abi.decode(userData, (UserData));
     if (data.borrowedAmount != amounts[0] || data.borrowedToken != tokens[0]) revert FAILED('!chk');
