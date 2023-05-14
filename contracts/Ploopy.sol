@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.17;
 
+import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
 import './interfaces/IFlashLoanRecipient.sol';
 import './PloopyConstants.sol';
 
-contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
+contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, ReentrancyGuard {
   constructor() {
     // approve rewardRouter to spend USDC for minting GLP
     USDC.approve(address(REWARD_ROUTER_V2), type(uint256).max);
@@ -23,8 +24,9 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
   event UserDataEvent(address indexed from, uint256 plvGlpAmount, string indexed borrowedToken, uint256 borrowedAmount);
 
   function loop(uint256 _plvGlpAmount, uint16 _leverage) external {
-    if (tx.origin != msg.sender) revert FAILED('!eoa');
-    if (_leverage < DIVISOR || _leverage > MAX_LEVERAGE) revert INVALID_LEVERAGE();
+  require(tx.origin == msg.sender, "Not an EOA");
+  require(_plvGlpAmount > 0, "Amount must be greater than 0");
+  require(_leverage >= DIVISOR && _leverage <= MAX_LEVERAGE, "Invalid leverage");
 
     // Transfer plvGLP to this contract so we can mint in 1 go.
     PLVGLP.transferFrom(msg.sender, address(this), _plvGlpAmount);
@@ -44,10 +46,10 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
     if (USDC.allowance(msg.sender, address(this)) < loanAmount) revert INVALID_APPROVAL();
     emit Allowance(USDC.allowance(msg.sender, address(this)), loanAmount);
 
-    IERC20[] memory tokens;
+    IERC20[] memory tokens = new IERC20[](1);
     tokens[0] = USDC;
 
-    uint256[] memory loanAmounts;
+    uint256[] memory loanAmounts = new uint256[](1);
     loanAmounts[0] = loanAmount;
 
     UserData memory userData = UserData({
@@ -66,7 +68,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
     uint256[] memory amounts,
     uint256[] memory feeAmounts,
     bytes memory userData
-  ) external override {
+  ) external override nonReentrant {
     if (msg.sender != address(BALANCER_VAULT)) revert UNAUTHORIZED('!vault');
 
     // additional checks?
@@ -90,6 +92,9 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
     // mint plvGLP. Approval needed.
     uint256 _oldPlvglpBal = PLVGLP.balanceOf(address(this));
     GLP_DEPOSITOR.deposit(glpAmount);
+    uint256 _newPlvglpBal = PLVGLP.balanceOf(address(this));
+    require(_newPlvglpBal > _oldPlvglpBal, "GLP deposit failed");
+
 
     // mint lPLVGLP by depositing plvGLP. Approval needed.
     unchecked {
