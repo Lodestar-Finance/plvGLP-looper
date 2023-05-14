@@ -4,6 +4,7 @@ const hre = require("hardhat");
 // Declare static constants
 const ploopyAddress = "0x9F320D2A950093e9639E14814Bd81aD099dF60bC";
 const _deployer = "0x0eDfa3fbE365CBF269DDc4b286eBD4797c78b21a";
+const _miscUser = "0x45ad22B2Ad15D4Cc3717A544d1e2D317E88A3B27";
 const _USDC = "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
 const _owner = "0x0eDfa3fbE365CBF269DDc4b286eBD4797c78b21a";
 const _divisor = 1e4;
@@ -112,11 +113,13 @@ describe("receiveFlashLoan", function () {
     });
 
 describe("Permissions and Access Control", function () {
-    // it("Should fail if non-owner tries to call an owner-only function", async function () {
-    //     const ploopy = await hre.ethers.getContractAt("Ploopy", ploopyAddress);
-    //     console.log("Ploopy contract address:", ploopy.address.toString());
-    //     await expect(ploopy.connect('0x0').ownerOnlyFunction()).to.be.reverted;
-    // });
+    it("Should fail if non-owner tries to call an owner-only function", async function () {
+        const ploopy = await hre.ethers.getContractAt("Ploopy", ploopyAddress);
+        console.log("Ploopy contract address:", ploopy.address.toString());
+        // [deployer, addr1, addr2, addr3] = await ethers.getSigners();
+        // console.log('Accounts:', [deployer, addr1, addr2, addr3]);
+        expect(ploopy.connect(_miscUser).transferOwnership(_owner)).to.be.reverted;
+    });
 
     // TODO: actuall fires off txn and processes it, we only want to mock it
     it("Should allow owner to call an owner-only function", async function () {
