@@ -82,7 +82,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     // mint GLP. Approval needed.
     uint256 glpAmount = REWARD_ROUTER_V2.mintAndStakeGlp(
       address(data.borrowedToken),
-      data.borrowedAmount,
+      data.borrowedAmount / 2,
       0,
       0
     );
@@ -94,7 +94,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     GLP_DEPOSITOR.deposit(glpAmount);
     uint256 _newPlvglpBal = PLVGLP.balanceOf(address(this));
     require(_newPlvglpBal > _oldPlvglpBal, "GLP deposit failed");
-
 
     // mint lPLVGLP by depositing plvGLP. Approval needed.
     unchecked {
