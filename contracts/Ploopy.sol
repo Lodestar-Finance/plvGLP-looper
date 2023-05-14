@@ -15,23 +15,34 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
     PLVGLP.approve(address(lPLVGLP), type(uint256).max);
   }
 
+  // Declare events
+  event Transfer(address indexed from, address indexed to, uint256 value);
+  event Loan(uint256 value);
+  event BalanceOf(uint256 balanceAmount, uint256 loanAmount);
+  event Allowance(uint256 allowance, uint256 loanAmount);
+  event UserDataEvent(address indexed from, uint256 plvGlpAmount, string indexed borrowedToken, uint256 borrowedAmount);
+
   function loop(uint256 _plvGlpAmount, uint16 _leverage) external {
     if (tx.origin != msg.sender) revert FAILED('!eoa');
     if (_leverage < DIVISOR || _leverage > MAX_LEVERAGE) revert INVALID_LEVERAGE();
 
     // Transfer plvGLP to this contract so we can mint in 1 go.
     PLVGLP.transferFrom(msg.sender, address(this), _plvGlpAmount);
+    emit Transfer(msg.sender, address(this), _plvGlpAmount);
 
     uint256 loanAmount = getNotionalLoanAmountIn1e18(
       _plvGlpAmount * PRICE_ORACLE.getPlvGLPPrice(),
       _leverage
     ) / 1e12; //usdc is 6 decimals
+    emit Loan(loanAmount);
 
     if (USDC.balanceOf(address(BALANCER_VAULT)) < loanAmount) revert FAILED('usdc<loan');
+    emit BalanceOf(USDC.balanceOf(address(BALANCER_VAULT)), loanAmount);
 
     // check approval to spend USDC (for paying back flashloan).
     // Possibly can omit to save gas as tx will fail with exceed allowance anyway.
     if (USDC.allowance(msg.sender, address(this)) < loanAmount) revert INVALID_APPROVAL();
+    emit Allowance(USDC.allowance(msg.sender, address(this)), loanAmount);
 
     IERC20[] memory tokens;
     tokens[0] = USDC;
@@ -45,6 +56,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient {
       borrowedToken: USDC,
       borrowedAmount: loanAmount
     });
+    emit UserDataEvent(msg.sender, _plvGlpAmount, 'USDC', loanAmount);
 
     BALANCER_VAULT.flashLoan(IFlashLoanRecipient(this), tokens, loanAmounts, abi.encode(userData));
   }
