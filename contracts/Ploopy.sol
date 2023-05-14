@@ -10,8 +10,12 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
   constructor() {
     // approve rewardRouter to spend USDC for minting GLP
     USDC.approve(address(REWARD_ROUTER_V2), type(uint256).max);
+    USDC.approve(address(GLP), type(uint256).max);
     // approve GlpDepositor to spend GLP for minting plvGLP
     sGLP.approve(address(GLP_DEPOSITOR), type(uint256).max);
+    GLP.approve(address(GLP_DEPOSITOR), type(uint256).max);
+    sGLP.approve(address(REWARD_ROUTER_V2), type(uint256).max);
+    GLP.approve(address(REWARD_ROUTER_V2), type(uint256).max);
     // approve lPLVGLP to spend plvGLP to mint lPLVGLP
     PLVGLP.approve(address(lPLVGLP), type(uint256).max);
   }
@@ -82,7 +86,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     // mint GLP. Approval needed.
     uint256 glpAmount = REWARD_ROUTER_V2.mintAndStakeGlp(
       address(data.borrowedToken),
-      data.borrowedAmount / 2,
+      data.borrowedAmount,
       0,
       0
     );
