@@ -19,7 +19,7 @@ contract PloopyConstants {
 
   // PLUTUS
   IGlpDepositor internal constant GLP_DEPOSITOR =
-    IGlpDepositor(0x13F0D29b5B83654A200E4540066713d50547606E);
+    IGlpDepositor(0xEAE85745232983CF117692a1CE2ECf3d19aDA683);
 
   // LODESTAR
   ICERC20 internal constant lUSDC = ICERC20(0xeF25968ECC2f13b6272a37312a409D429DEF70AB);
