@@ -30,6 +30,12 @@ const config: HardhatUserConfig = {
     ]
   },
   networks: {
+    hardhat: {
+      forking: {
+        url: 'https://api.avax.network/ext/bc/C/rpc'
+      },
+      gas: "auto"
+    },
     arbitrum: {
       url: process.env.ARB_RPC,
       accounts: [process.env.ARB_PK ?? '']
