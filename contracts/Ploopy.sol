@@ -97,13 +97,13 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
 
     // TODO whitelist this contract for plvGLP mint
     // mint plvGLP. Approval needed.
-    // uint256 _oldPlvglpBal = PLVGLP.balanceOf(address(this));
-    // GLP_DEPOSITOR.deposit(glpAmount);
+    uint256 _oldPlvglpBal = PLVGLP.balanceOf(address(this));
+    GLP_DEPOSITOR.deposit(glpAmount);
 
-    // // check new balances and confirm we properly minted
-    // uint256 _newPlvglpBal = PLVGLP.balanceOf(address(this));
-    // require(_newPlvglpBal > _oldPlvglpBal, "GLP deposit failed");
-    // emit PLVGLPBalanceChange(_oldPlvglpBal, _newPlvglpBal);
+    // check new balances and confirm we properly minted
+    uint256 _newPlvglpBal = PLVGLP.balanceOf(address(this));
+    require(_newPlvglpBal > _oldPlvglpBal, "GLP deposit failed");
+    emit PLVGLPBalanceChange(_oldPlvglpBal, _newPlvglpBal);
 
     // mint lPLVGLP by depositing plvGLP. Approval needed.
     unchecked {
@@ -120,7 +120,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     }
 
     // call borrowBehalf to borrow USDC on behalf of user
-    // lUSDC.borrowBehalf(data.borrowedAmount, data.user);
+    lUSDC.borrowBehalf(data.borrowedAmount, data.user);
 
     // repay loan: msg.sender = vault
     USDC.transferFrom(data.user, msg.sender, data.borrowedAmount);
