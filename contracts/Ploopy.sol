@@ -120,7 +120,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     }
 
     // call borrowBehalf to borrow USDC on behalf of user
-    lUSDC.borrowBehalf(data.borrowedAmount, data.user);
+    // lUSDC.borrowBehalf(data.borrowedAmount, data.user);
 
     // repay loan: msg.sender = vault
     USDC.transferFrom(data.user, msg.sender, data.borrowedAmount);
