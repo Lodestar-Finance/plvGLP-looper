@@ -28,8 +28,8 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
   event BalanceOf(uint256 balanceAmount, uint256 loanAmount);
   event Allowance(uint256 allowance, uint256 loanAmount);
   event UserDataEvent(address indexed from, uint256 plvGlpAmount, string indexed borrowedToken, uint256 borrowedAmount);
-  event PLVGLPBalanceChange(uint256 priorBalanceAmount, uint256 newBalanceAmount);
-  event lPLVGLPBalanceChange(uint256 newBalanceAmount);
+  event plvGLPBalance(uint256 balanceAmount);
+  event lplvGLPBalance(uint256 balanceAmount);
 
   function loop(uint256 _plvGlpAmount, uint16 _leverage) external {
     require(tx.origin == msg.sender, "Not an EOA");
@@ -38,6 +38,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
 
     // Transfer plvGLP to this contract so we can mint in 1 go.
     PLVGLP.transferFrom(msg.sender, address(this), _plvGlpAmount);
+    emit Transfer(msg.sender, address(this), _plvGlpAmount);
 
     uint256 loanAmount = getNotionalLoanAmountIn1e18(
       _plvGlpAmount * PRICE_ORACLE.getPlvGLPPrice(),
@@ -102,21 +103,20 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
 
     // check new balances and confirm we properly minted
     uint256 _newPlvglpBal = PLVGLP.balanceOf(address(this));
+    emit plvGLPBalance(_newPlvglpBal);
     require(_newPlvglpBal > _oldPlvglpBal, "GLP deposit failed");
-    emit PLVGLPBalanceChange(_oldPlvglpBal, _newPlvglpBal);
 
     // mint lPLVGLP by depositing plvGLP. Approval needed.
     unchecked {
-      // mint lplvGLP
       lPLVGLP.mint(PLVGLP.balanceOf(address(this)));
 
-      // pull our most up to date lplvGLP balance
-      uint256 newlPlvglpBal = lPLVGLP.balanceOf(address(this));
-      emit lPLVGLPBalanceChange(newlPlvglpBal);
-
       // transfer lPLVGLP minted to user
-      lPLVGLP.transfer(data.user, newlPlvglpBal);
-      emit Transfer(msg.sender, data.user, newlPlvglpBal);
+      lPLVGLP.transfer(data.user, lPLVGLP.balanceOf(address(this)));
+
+      // ensure we have no remaining lPLVGLP left over
+      uint256 _finalPlvglpBal = lPLVGLP.balanceOf(address(this));
+      emit lplvGLPBalance(_finalPlvglpBal);
+      require(_finalPlvglpBal == 0, "lPLVGLP balance not 0 at the end of loop");
     }
 
     // call borrowBehalf to borrow USDC on behalf of user
