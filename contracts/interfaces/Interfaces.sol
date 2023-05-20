@@ -6,9 +6,10 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 interface IPloopy {
   struct UserData {
     address user;
-    uint256 plvGlpAmount;
+    uint256 tokenAmount;
     IERC20 borrowedToken;
     uint256 borrowedAmount;
+    IERC20 tokenToLoop; 
   }
 
   error UNAUTHORIZED(string);
