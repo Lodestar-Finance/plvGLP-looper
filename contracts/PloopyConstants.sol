@@ -29,8 +29,4 @@ contract PloopyConstants {
 
   uint256 public constant DIVISOR = 1e4;
   uint16 public constant MAX_LEVERAGE = 30_000; // in {DIVISOR} terms. E.g. 30_000 = 3.0;
-  uint256 public constant LTOKEN_MAPPING = {
-    USDC: lUSDC,
-    PLVGLP: lPLVGLP
-  }
 }
