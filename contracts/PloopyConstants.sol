@@ -7,7 +7,7 @@ import { IPloopy, ICERC20, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH 
 contract PloopyConstants {
   IVault internal constant BALANCER_VAULT = IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
   IERC20 internal constant USDC = IERC20(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
-  IERC20 internal constant ETH = IERC20(0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8);
+  IERC20 internal constant ETH = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
   IERC20 internal constant PLVGLP = IERC20(0x5326E71Ff593Ecc2CF7AcaE5Fe57582D6e74CFF1);
   IERC20 internal constant GLP = IERC20(0x1aDDD80E6039594eE970E5872D247bf0414C8903);
 
@@ -27,7 +27,7 @@ contract PloopyConstants {
   ICERC20 internal constant lETH = ICERC20(0xFdEA956EA2D420571dEadEF18a3d38525e17361C);
   ICERC20 internal constant lPLVGLP = ICERC20(0xDFD276A2460eDb150DE2622f2D947EEa21C3EE48);
   IPriceOracleProxyETH internal constant PRICE_ORACLE =
-    IPriceOracleProxyETH(0xcC3D0d211dF6157cb94b5AaCfD55D41acd3a9A7A);
+    IPriceOracleProxyETH(0x569dd9Bc87c7eB5De658c912d21ccB661aA249bD);
 
   uint256 public constant DIVISOR = 1e4;
   uint16 public constant MAX_LEVERAGE = 30_000; // in {DIVISOR} terms. E.g. 30_000 = 3.0;

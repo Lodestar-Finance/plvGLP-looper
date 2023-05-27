@@ -72,5 +72,5 @@ interface ICERC20 is IERC20, ICERC20Update {
 }
 
 interface IPriceOracleProxyETH {
-  function getPlvGLPPrice() external view returns (uint256);
+  function getUnderlyingPrice(address cToken) external view returns (uint256);
 }
