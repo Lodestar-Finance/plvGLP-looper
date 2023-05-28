@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import './interfaces/IVault.sol';
-import { IPloopy, ICERC20, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH } from './interfaces/Interfaces.sol';
+import { IPloopy, ICERC20, ERC20, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH } from './interfaces/Interfaces.sol';
 
 contract PloopyConstants {
   IVault internal constant BALANCER_VAULT = IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
@@ -13,6 +13,7 @@ contract PloopyConstants {
   IERC20 internal constant DAI = IERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
   IERC20 internal constant FRAX = IERC20(0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F);
   IERC20 internal constant ETH = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
+  ERC20 internal constant WETH = ERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
   IERC20 internal constant PLVGLP = IERC20(0x5326E71Ff593Ecc2CF7AcaE5Fe57582D6e74CFF1);
   IERC20 internal constant GLP = IERC20(0x1aDDD80E6039594eE970E5872D247bf0414C8903);
 

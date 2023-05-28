@@ -149,7 +149,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     });
     emit UserDataEvent(msg.sender, _amount, address(_tokenToBorrow), loanAmount, address(_token));
 
-    // Now that we have all of the respective user data, its time to flash loan
     BALANCER_VAULT.flashLoan(IFlashLoanRecipient(this), tokens, loanAmounts, abi.encode(userData));
   }
 
@@ -171,7 +170,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
 
     // account for some plvGLP specific logic
     if (data.tokenToLoop == PLVGLP) {
-      // mint GLP. Approval needed.
+      // mint GLP. approval needed.
       uint256 glpAmount = REWARD_ROUTER_V2.mintAndStakeGlp(
         address(data.borrowedToken),
         data.borrowedAmount,
@@ -181,7 +180,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       if (glpAmount == 0) revert FAILED('glp=0');
 
       // TODO whitelist this contract for plvGLP mint
-      // mint plvGLP. Approval needed.
+      // mint plvGLP. approval needed.
       uint256 _oldPlvglpBal = PLVGLP.balanceOf(address(this));
       GLP_DEPOSITOR.deposit(glpAmount);
 
@@ -191,26 +190,32 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       require(_newPlvglpBal > _oldPlvglpBal, "glp deposit failed, new balance < old balance");
     }
 
-    // mint our respective token by depositing it into Lodestar's respective lToken contract.
-    // approval needed.
+    // mint our respective token by depositing it into Lodestar's respective lToken contract (approval needed)
     unchecked {
-      lTokenMapping[data.tokenToLoop].mint(data.tokenToLoop.balanceOf(address(this)));
-      // lPLVGLP.mint(PLVGLP.balanceOf(address(this)));
+      // lets get eth instead of weth so we can properly mint
+      if (data.tokenToLoop == ETH) {
+        WETH.withdraw(data.borrowedAmount);
+      }
 
-      // transfer lPLVGLP minted to user
+      lTokenMapping[data.tokenToLoop].mint(data.tokenToLoop.balanceOf(address(this)));
       lTokenMapping[data.tokenToLoop].transfer(data.user, lTokenMapping[data.tokenToLoop].balanceOf(address(this)));
 
-      // ensure we have no remaining lPLVGLP
       uint256 _finalBal = lTokenMapping[data.tokenToLoop].balanceOf(address(this));
       emit lTokenBalance(_finalBal);
       require(_finalBal == 0, "lToken balance not 0 at the end of loop");
     }
 
-    // call borrowBehalf to borrow USDC on behalf of user
+    // call borrowBehalf to borrow tokens on behalf of user
     lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
 
-    // repay loan where msg.sender = vault
-    data.tokenToLoop.transferFrom(data.user, msg.sender, data.borrowedAmount);
+    if (data.tokenToLoop == ETH) {
+      WETH.deposit(data.borrowedAmount);
+      // ensure we pay the loan back with weth
+      WETH.transferFrom(data.user, msg.sender, data.borrowedAmount);
+    } else {
+      // repay loan, where msg.sender = vault
+      data.tokenToLoop.transferFrom(data.user, msg.sender, data.borrowedAmount);
+    }
   }
 
   function getNotionalLoanAmountIn1e18(
