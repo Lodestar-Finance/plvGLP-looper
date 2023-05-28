@@ -7,38 +7,43 @@ import './interfaces/IFlashLoanRecipient.sol';
 import './PloopyConstants.sol';
 
 contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, ReentrancyGuard {
-  // Add mapping of token addresses to their decimal places
+  // add mapping of token addresses to their decimal places
   mapping(IERC20 => uint8) public decimals;
-  // Add mapping to store the allowed tokens. Mapping provides faster access than array
+  // add mapping to store the allowed tokens. Mapping provides faster access than array
   mapping(IERC20 => bool) public allowedTokens;
-  // Add mapping to store lToken contracts
+  // add mapping to store lToken contracts
   mapping(IERC20 => ICERC20) private lTokenMapping;
 
   constructor() {
-    // Initialize decimals for each token
+    // initialize decimals for each token
     decimals[USDC] = 6;
-    // decimals[USDT] = 6;
-    // decimals[WBTC] = 8;
-    // decimals[DAI] = 18;
+    decimals[USDT] = 6;
+    decimals[WBTC] = 8;
+    decimals[DAI] = 18;
+    decimals[FRAX] = 18;
     decimals[ETH] = 18;
-    // decimals[ARB] = 18;
-    // decimals[DPX] = 18;
-    // decimals[MAGIC] = 18;
+    decimals[ARB] = 18;
     decimals[PLVGLP] = 18;
 
-    // Set the allowed tokens in the constructor, we can add/remove these with owner functions later
+    // set the allowed tokens in the constructor
+    // we can add/remove these with owner functions later
     allowedTokens[USDC] = true;
-    // allowedTokens[USDT] = true;
-    // allowedTokens[WBTC] = true;
-    // allowedTokens[DAI] = true;
+    allowedTokens[USDT] = true;
+    allowedTokens[WBTC] = true;
+    allowedTokens[DAI] = true;
+    allowedTokens[FRAX] = true;
     allowedTokens[ETH] = true;
-    // allowedTokens[ARB] = true;
-    // allowedTokens[DPX] = true;
-    // allowedTokens[MAGIC] = true;
+    allowedTokens[ARB] = true;
     allowedTokens[PLVGLP] = true;
 
-    // Map tokens to lTokens
+    // map tokens to lTokens
     lTokenMapping[USDC] = lUSDC;
+    lTokenMapping[USDT] = lUSDT;
+    lTokenMapping[WBTC] = lWBTC;
+    lTokenMapping[DAI] = lDAI;
+    lTokenMapping[FRAX] = lFRAX;
+    lTokenMapping[ETH] = lETH;
+    lTokenMapping[ARB] = lARB;
     lTokenMapping[PLVGLP] = lPLVGLP;
 
     // approve glp contracts to spend USDC for minting GLP
@@ -59,7 +64,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     ETH.approve(address(lETH), type(uint256).max);
   }
 
-  // Declare events
+  // declare events
   event Transfer(address indexed from, address indexed to, uint256 value);
   event Loan(uint256 value);
   event BalanceOf(uint256 balanceAmount, uint256 loanAmount);
@@ -68,55 +73,64 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
   event plvGLPBalance(uint256 balanceAmount);
   event lTokenBalance(uint256 balanceAmount);
 
-  // Function to add a token to the list of allowed tokens
   function addToken(IERC20 token) external onlyOwner {
-      require(!allowedTokens[token], "Token already allowed");
+      require(!allowedTokens[token], "token already allowed");
       allowedTokens[token] = true;
   }
 
-  // Function to remove a token from the list of allowed tokens
   function removeToken(IERC20 token) external onlyOwner {
-      require(allowedTokens[token], "Token not allowed");
+      require(allowedTokens[token], "token not allowed");
       allowedTokens[token] = false;
   }
-  // The juice. Allows users to loop to a desired leverage, within our ranges
-  function loop(IERC20 _token, uint256 _amount, uint16 _leverage) external {
-    require(allowedTokens[_token], "Token not allowed to loop");
-    require(tx.origin == msg.sender, "Not an EOA");
-    require(_amount > 0, "Amount must be greater than 0");
-    require(_leverage >= DIVISOR && _leverage <= MAX_LEVERAGE, "Invalid leverage, range must be between DIVISOR and MAX_LEVERAGE values");
 
-    // Transfer tokens to this contract so we can mint in 1 go.
-    // PLVGLP.transferFrom(msg.sender, address(this), _plvGlpAmount);
-    _token.transferFrom(msg.sender, address(this), _amount);
-    emit Transfer(msg.sender, address(this), _amount);
+  // allows users to loop to a desired leverage, within our pre-set ranges
+  function loop(IERC20 _token, uint256 _amount, uint16 _leverage, uint16 _useWalletBalance) external {
+    require(allowedTokens[_token], "token not allowed to loop");
+    require(tx.origin == msg.sender, "not an EOA");
+    require(_amount > 0, "amount must be greater than 0");
+    require(_leverage >= DIVISOR && _leverage <= MAX_LEVERAGE, "invalid leverage, range must be between DIVISOR and MAX_LEVERAGE values");
 
-    // TODO: need to get getUnderlyingPrice() function working for our PriceOracleProxyETH contract we are testing with
+    // if the user wants us to mint using their existing wallet balance (indiciated with 1), then do so.
+    // otherwise, read their existing balance and flash loan to increase their position
+    if (_useWalletBalance == 1) {
+      // transfer tokens to this contract so we can mint in 1 go.
+      _token.transferFrom(msg.sender, address(this), _amount);
+      emit Transfer(msg.sender, address(this), _amount);
+    }
     
     uint256 loanAmount;
     IERC20 _tokenToBorrow;
+
     if (_token == PLVGLP) {
+      uint256 _tokenPriceInEth;
+      uint256 _usdcPriceInEth;
+      uint256 _computedAmount;
+
       // plvGLP borrows USDC to loop
       _tokenToBorrow = USDC;
+      _tokenPriceInEth = PRICE_ORACLE.getUnderlyingPrice(address(lTokenMapping[_token]));
+      _usdcPriceInEth = (PRICE_ORACLE.getUnderlyingPrice(address(lUSDC)) / 1e12);
+      _computedAmount = (_amount * (_tokenPriceInEth / _usdcPriceInEth));
+
       loanAmount = getNotionalLoanAmountIn1e18(
-      _amount * PRICE_ORACLE.getUnderlyingPrice(address(lTokenMapping[_token])),
+        _computedAmount,
         _leverage
-      ) / 1e12; //usdc is 6 decimals
+      );
     } else {
-      // The rest of the contracts just borrow whatever token is supplied
+      // the rest of the contracts just borrow whatever token is supplied
       _tokenToBorrow = _token;
       loanAmount = getNotionalLoanAmountIn1e18(
         _amount, // we can just send over the exact amount, as we are either looping stables or eth
         _leverage
       );
     }
-    // loanAmount = uint256(1154250);
-    if (_tokenToBorrow.balanceOf(address(BALANCER_VAULT)) < loanAmount) revert FAILED('balance vault token balance<loan');
+
+    if (_tokenToBorrow.balanceOf(address(BALANCER_VAULT)) < loanAmount) revert FAILED('balancer vault token balance < loan');
     emit Loan(loanAmount);
     emit BalanceOf(_tokenToBorrow.balanceOf(address(BALANCER_VAULT)), loanAmount);
 
     // check approval to spend USDC (for paying back flashloan).
-    // Possibly can omit to save gas as tx will fail with exceed allowance anyway.
+    // possibly can omit to save gas as tx will fail with exceed allowance anyway.
     if (_tokenToBorrow.allowance(msg.sender, address(this)) < loanAmount) revert INVALID_APPROVAL();
     emit Allowance(_tokenToBorrow.allowance(msg.sender, address(this)), loanAmount);
 
@@ -145,15 +159,15 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     uint256[] memory feeAmounts,
     bytes memory userData
   ) external override nonReentrant {
-    if (msg.sender != address(BALANCER_VAULT)) revert UNAUTHORIZED('!vault');
+    if (msg.sender != address(BALANCER_VAULT)) revert UNAUTHORIZED('balancer vault is not the sender');
 
     // additional checks?
 
     UserData memory data = abi.decode(userData, (UserData));
-    if (data.borrowedAmount != amounts[0] || data.borrowedToken != tokens[0]) revert FAILED('!chk');
+    if (data.borrowedAmount != amounts[0] || data.borrowedToken != tokens[0]) revert FAILED('borrowed amounts and/or borrowed tokens do not match initially set values');
 
     // sanity check: flashloan has no fees
-    if (feeAmounts[0] > 0) revert FAILED('fee>0');
+    if (feeAmounts[0] > 0) revert FAILED('balancer fee > 0');
 
     // account for some plvGLP specific logic
     if (data.tokenToLoop == PLVGLP) {
@@ -174,7 +188,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       // check new balances and confirm we properly minted
       uint256 _newPlvglpBal = PLVGLP.balanceOf(address(this));
       emit plvGLPBalance(_newPlvglpBal);
-      require(_newPlvglpBal > _oldPlvglpBal, "GLP deposit failed");
+      require(_newPlvglpBal > _oldPlvglpBal, "glp deposit failed, new balance < old balance");
     }
 
     // mint our respective token by depositing it into Lodestar's respective lToken contract.
