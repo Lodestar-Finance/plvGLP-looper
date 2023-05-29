@@ -3,10 +3,12 @@ pragma solidity 0.8.17;
 
 import '@openzeppelin/contracts/security/ReentrancyGuard.sol';
 import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol';
 import './interfaces/IFlashLoanRecipient.sol';
 import './PloopyConstants.sol';
 
 contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, ReentrancyGuard {
+  using SafeERC20 for IERC20;
   // add mapping of token addresses to their decimal places
   mapping(IERC20 => uint8) public decimals;
   // add mapping to store the allowed tokens. Mapping provides faster access than array
@@ -94,7 +96,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     // otherwise, read their existing balance and flash loan to increase their position
     if (_useWalletBalance == 1) {
       // transfer tokens to this contract so we can mint in 1 go.
-      _token.transferFrom(msg.sender, address(this), _amount);
+      _token.safeTransferFrom(msg.sender, address(this), _amount);
       emit Transfer(msg.sender, address(this), _amount);
     }
     
@@ -151,6 +153,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
 
     BALANCER_VAULT.flashLoan(IFlashLoanRecipient(this), tokens, loanAmounts, abi.encode(userData));
   }
+  
 
   function receiveFlashLoan(
     IERC20[] memory tokens,
@@ -214,7 +217,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       WETH.transferFrom(data.user, msg.sender, data.borrowedAmount);
     } else {
       // repay loan, where msg.sender = vault
-      data.tokenToLoop.transferFrom(data.user, msg.sender, data.borrowedAmount);
+      data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
     }
   }
 
