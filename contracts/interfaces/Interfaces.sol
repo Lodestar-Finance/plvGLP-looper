@@ -42,7 +42,9 @@ interface ICERC20Update {
 interface WETHlike {
   // weth stuff
   function withdraw(uint256 amount) external;
+  function withdrawTo(address account, uint256 amount) external;
   function deposit(uint256 payableAmount) external payable;
+  function depositTo(uint256 payableAmount, address account) external payable;
   function transferFrom(address sender, address recipient, uint256 amount) external;
   function balanceOf(address account) external returns (uint256);
 }
