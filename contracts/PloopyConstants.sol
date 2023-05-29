@@ -13,9 +13,10 @@ contract PloopyConstants {
   IERC20 internal constant DAI = IERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
   IERC20 internal constant FRAX = IERC20(0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F);
   IERC20 internal constant ETH = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
-  ERC20 internal constant WETH = ERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
   IERC20 internal constant PLVGLP = IERC20(0x5326E71Ff593Ecc2CF7AcaE5Fe57582D6e74CFF1);
   IERC20 internal constant GLP = IERC20(0x1aDDD80E6039594eE970E5872D247bf0414C8903);
+
+  ERC20 internal constant WETH = ERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
 
   // GMX
   IERC20 internal constant VAULT = IERC20(0x489ee077994B6658eAfA855C308275EAd8097C4A);
@@ -30,6 +31,10 @@ contract PloopyConstants {
 
   // LODESTAR
   ICERC20 internal constant lUSDC = ICERC20(0xeF25968ECC2f13b6272a37312a409D429DEF70AB);
+  ICERC20 internal constant lETH = ICERC20(0xFdEA956EA2D420571dEadEF18a3d38525e17361C);
+  ICERC20 internal constant lPLVGLP = ICERC20(0xDFD276A2460eDb150DE2622f2D947EEa21C3EE48);
+  IPriceOracleProxyETH internal constant PRICE_ORACLE =
+    IPriceOracleProxyETH(0x569dd9Bc87c7eB5De658c912d21ccB661aA249bD);
 
   // no testnet contracts, so putting main for now for future use
   ICERC20 internal constant lARB = ICERC20(0xe57390EB5F0dd76B545d7349845839Ad6A4faee8);
@@ -37,10 +42,6 @@ contract PloopyConstants {
   ICERC20 internal constant lUSDT = ICERC20(0x2d5a5306E6Cd7133AE576eb5eDB2128D79D11A88);
   ICERC20 internal constant lDAI = ICERC20(0x8c7B5F470251fED433e38215a959eeEFc900d995);
   ICERC20 internal constant lFRAX = ICERC20(0xc9c043A7f80258d492121d2f34e829EB6517Eb17);
-  ICERC20 internal constant lETH = ICERC20(0xFdEA956EA2D420571dEadEF18a3d38525e17361C);
-  ICERC20 internal constant lPLVGLP = ICERC20(0xDFD276A2460eDb150DE2622f2D947EEa21C3EE48);
-  IPriceOracleProxyETH internal constant PRICE_ORACLE =
-    IPriceOracleProxyETH(0x569dd9Bc87c7eB5De658c912d21ccB661aA249bD);
 
   uint256 public constant DIVISOR = 1e4;
   uint16 public constant MAX_LEVERAGE = 30_000; // in {DIVISOR} terms. E.g. 30_000 = 3.0;

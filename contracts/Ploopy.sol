@@ -59,11 +59,21 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     GLP.approve(address(REWARD_ROUTER_V2), type(uint256).max);
     // approve balancer vault
     USDC.approve(address(VAULT), type(uint256).max);
+    USDT.approve(address(VAULT), type(uint256).max);
+    WBTC.approve(address(VAULT), type(uint256).max);
+    DAI.approve(address(VAULT), type(uint256).max);
+    FRAX.approve(address(VAULT), type(uint256).max);
     ETH.approve(address(VAULT), type(uint256).max);
+    ARB.approve(address(VAULT), type(uint256).max);
     // approve lTokens to be minted using underlying
     PLVGLP.approve(address(lPLVGLP), type(uint256).max);
     USDC.approve(address(lUSDC), type(uint256).max);
+    USDT.approve(address(lUSDT), type(uint256).max);
+    WBTC.approve(address(lWBTC), type(uint256).max);
+    DAI.approve(address(lDAI), type(uint256).max);
+    FRAX.approve(address(lFRAX), type(uint256).max);
     ETH.approve(address(lETH), type(uint256).max);
+    ARB.approve(address(lARB), type(uint256).max);
   }
 
   // declare events
