@@ -39,6 +39,14 @@ interface ICERC20Update {
   function borrowBehalf(uint256 borrowAmount, address borrowee) external returns (uint256);
 }
 
+interface WETHlike {
+  // weth stuff
+  function withdraw(uint256 amount) external;
+  function deposit(uint256 payableAmount) external payable;
+  function transferFrom(address sender, address recipient, uint256 amount) external;
+  function balanceOf(address account) external returns (uint256);
+}
+
 interface ICERC20 is IERC20, ICERC20Update {
   // CToken
   /**
@@ -70,16 +78,6 @@ interface ICERC20 is IERC20, ICERC20Update {
   // Cerc20
   function mint(uint256 mintAmount) external returns (uint256);
 }
-
-interface ERC20 {
-  // weth stuff
-  function withdraw(uint256 amount) external returns (uint256);
-
-  function deposit(uint256 payableAmount) external returns (uint256);
-
-  function transferFrom(address sender, address recipient, uint256 amount) external returns (uint256);
-}
-
 
 interface IPriceOracleProxyETH {
   function getUnderlyingPrice(address cToken) external view returns (uint256);
