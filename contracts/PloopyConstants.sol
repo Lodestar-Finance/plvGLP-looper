@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import './interfaces/IVault.sol';
-import { IPloopy, ICERC20, WETHlike, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH } from './interfaces/Interfaces.sol';
+import { IPloopy, ICERC20, Cether, WETHlike, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH } from './interfaces/Interfaces.sol';
 
 contract PloopyConstants {
   IVault internal constant BALANCER_VAULT = IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
@@ -31,7 +31,7 @@ contract PloopyConstants {
 
   // LODESTAR
   ICERC20 internal constant lUSDC = ICERC20(0xeF25968ECC2f13b6272a37312a409D429DEF70AB);
-  ICERC20 internal constant lETH = ICERC20(0xFdEA956EA2D420571dEadEF18a3d38525e17361C);
+  Cether internal constant lETH = Cether(0xFdEA956EA2D420571dEadEF18a3d38525e17361C);
   ICERC20 internal constant lPLVGLP = ICERC20(0xDFD276A2460eDb150DE2622f2D947EEa21C3EE48);
   IPriceOracleProxyETH internal constant PRICE_ORACLE =
     IPriceOracleProxyETH(0x569dd9Bc87c7eB5De658c912d21ccB661aA249bD);

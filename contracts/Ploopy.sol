@@ -44,7 +44,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     lTokenMapping[WBTC] = lWBTC;
     lTokenMapping[DAI] = lDAI;
     lTokenMapping[FRAX] = lFRAX;
-    lTokenMapping[ETH] = lETH;
+    // lTokenMapping[ETH] = lETH;
     lTokenMapping[ARB] = lARB;
     lTokenMapping[PLVGLP] = lPLVGLP;
 
@@ -64,6 +64,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     DAI.approve(address(VAULT), type(uint256).max);
     FRAX.approve(address(VAULT), type(uint256).max);
     ETH.approve(address(VAULT), type(uint256).max);
+    WETH.approve(address(VAULT), type(uint256).max);
     ARB.approve(address(VAULT), type(uint256).max);
     // approve lTokens to be minted using underlying
     PLVGLP.approve(address(lPLVGLP), type(uint256).max);
@@ -74,6 +75,8 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     FRAX.approve(address(lFRAX), type(uint256).max);
     ETH.approve(address(lETH), type(uint256).max);
     ARB.approve(address(lARB), type(uint256).max);
+    // approve Ploopy to withdraw and deposit to WETH contract
+    WETH.approve(address(this), type(uint256).max);
   }
 
   // declare events
@@ -84,6 +87,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
   event UserDataEvent(address indexed from, uint256 tokenAmount, address borrowedToken, uint256 borrowedAmount, address tokenToLoop);
   event plvGLPBalance(uint256 balanceAmount);
   event lTokenBalance(uint256 balanceAmount);
+  event Received(address, uint);
 
   function addToken(IERC20 token) external onlyOwner {
       require(!allowedTokens[token], "token already allowed");
@@ -203,17 +207,23 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       require(_newPlvglpBal > _oldPlvglpBal, "glp deposit failed, new balance < old balance");
     }
 
+    uint256 _finalBal;
+
     // mint our respective token by depositing it into Lodestar's respective lToken contract (approval needed)
     unchecked {
       // lets get eth instead of weth so we can properly mint
       if (data.tokenToLoop == ETH) {
         WETH.withdraw(data.borrowedAmount);
+        // mint our eth balance
+        lETH.mint{ value: address(this).balance }();
+        lETH.transfer(data.user, lETH.balanceOf(address(this)));
+        _finalBal = lETH.balanceOf(address(this));
+      } else {
+        lTokenMapping[data.tokenToLoop].mint(data.tokenToLoop.balanceOf(address(this)));
+        lTokenMapping[data.tokenToLoop].transfer(data.user, lTokenMapping[data.tokenToLoop].balanceOf(address(this)));
+        _finalBal = lTokenMapping[data.tokenToLoop].balanceOf(address(this));
       }
 
-      lTokenMapping[data.tokenToLoop].mint(data.tokenToLoop.balanceOf(address(this)));
-      lTokenMapping[data.tokenToLoop].transfer(data.user, lTokenMapping[data.tokenToLoop].balanceOf(address(this)));
-
-      uint256 _finalBal = lTokenMapping[data.tokenToLoop].balanceOf(address(this));
       emit lTokenBalance(_finalBal);
       require(_finalBal == 0, "lToken balance not 0 at the end of loop");
     }
@@ -222,9 +232,9 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
 
     if (data.tokenToLoop == ETH) {
-      WETH.deposit(data.borrowedAmount);
+      WETH.deposit{ value: data.borrowedAmount }();
       // ensure we pay the loan back with weth
-      WETH.transferFrom(data.user, msg.sender, data.borrowedAmount);
+      WETH.transferFrom(address(this), msg.sender, data.borrowedAmount);
     } else {
       // repay loan, where msg.sender = vault
       data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
@@ -238,5 +248,10 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     unchecked {
       return ((_leverage - DIVISOR) * _notionalTokenAmountIn1e18) / DIVISOR;
     }
+  }
+
+  // we need this in order to receive ether back to the contract
+  receive() external payable {
+    emit Received(msg.sender, msg.value);
   }
 }
