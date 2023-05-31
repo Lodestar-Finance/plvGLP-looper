@@ -228,14 +228,15 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       require(_finalBal == 0, "lToken balance not 0 at the end of loop");
     }
 
-    // call borrowBehalf to borrow tokens on behalf of user
-    lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
-
     if (data.tokenToLoop == ETH) {
+      // call leth specifically because it's special:
+      lETH.borrowBehalf(data.borrowedAmount, data.user);
       WETH.deposit{ value: data.borrowedAmount }();
       // ensure we pay the loan back with weth
       WETH.transferFrom(address(this), msg.sender, data.borrowedAmount);
     } else {
+      // call borrowBehalf to borrow tokens on behalf of user
+      lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
       // repay loan, where msg.sender = vault
       data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
     }
