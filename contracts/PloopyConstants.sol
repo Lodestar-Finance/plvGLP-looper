@@ -30,11 +30,11 @@ contract PloopyConstants {
     IGlpDepositor(0xEAE85745232983CF117692a1CE2ECf3d19aDA683);
 
   // LODESTAR
-  ICERC20 internal constant lUSDC = ICERC20(0xeF25968ECC2f13b6272a37312a409D429DEF70AB);
-  Cether internal constant lETH = Cether(0xFdEA956EA2D420571dEadEF18a3d38525e17361C);
-  ICERC20 internal constant lPLVGLP = ICERC20(0xDFD276A2460eDb150DE2622f2D947EEa21C3EE48);
+  ICERC20 internal constant lUSDC = ICERC20(0xF17C9D4062e2e652f81E43f9304EdDE3Fb3e63dB);
+  Cether internal constant lETH = Cether(0xf292a26B752D1A013dCCf0B1fEbEf2de251D3a4C);
+  ICERC20 internal constant lPLVGLP = ICERC20(0xE728c318A6fD3b605726E810C2c542FD8056708c);
   IPriceOracleProxyETH internal constant PRICE_ORACLE =
-    IPriceOracleProxyETH(0x569dd9Bc87c7eB5De658c912d21ccB661aA249bD);
+    IPriceOracleProxyETH(0x911927A2E313E142FD92002f854483fF5a800b7e);
 
   // no testnet contracts, so putting main for now for future use
   ICERC20 internal constant lARB = ICERC20(0xe57390EB5F0dd76B545d7349845839Ad6A4faee8);
