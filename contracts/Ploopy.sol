@@ -23,7 +23,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     decimals[WBTC] = 8;
     decimals[DAI] = 18;
     decimals[FRAX] = 18;
-    decimals[ETH] = 18;
     decimals[ARB] = 18;
     decimals[PLVGLP] = 18;
 
@@ -34,7 +33,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     allowedTokens[WBTC] = true;
     allowedTokens[DAI] = true;
     allowedTokens[FRAX] = true;
-    allowedTokens[ETH] = true;
     allowedTokens[ARB] = true;
     allowedTokens[PLVGLP] = true;
 
@@ -44,7 +42,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     lTokenMapping[WBTC] = lWBTC;
     lTokenMapping[DAI] = lDAI;
     lTokenMapping[FRAX] = lFRAX;
-    // lTokenMapping[ETH] = lETH;
     lTokenMapping[ARB] = lARB;
     lTokenMapping[PLVGLP] = lPLVGLP;
 
@@ -63,8 +60,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     WBTC.approve(address(VAULT), type(uint256).max);
     DAI.approve(address(VAULT), type(uint256).max);
     FRAX.approve(address(VAULT), type(uint256).max);
-    ETH.approve(address(VAULT), type(uint256).max);
-    WETH.approve(address(VAULT), type(uint256).max);
     ARB.approve(address(VAULT), type(uint256).max);
     // approve lTokens to be minted using underlying
     PLVGLP.approve(address(lPLVGLP), type(uint256).max);
@@ -73,10 +68,7 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     WBTC.approve(address(lWBTC), type(uint256).max);
     DAI.approve(address(lDAI), type(uint256).max);
     FRAX.approve(address(lFRAX), type(uint256).max);
-    ETH.approve(address(lETH), type(uint256).max);
     ARB.approve(address(lARB), type(uint256).max);
-    // approve Ploopy to withdraw and deposit to WETH contract
-    WETH.approve(address(this), type(uint256).max);
   }
 
   // declare events
@@ -211,35 +203,18 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
 
     // mint our respective token by depositing it into Lodestar's respective lToken contract (approval needed)
     unchecked {
-      // lets get eth instead of weth so we can properly mint
-      if (data.tokenToLoop == ETH) {
-        WETH.withdraw(data.borrowedAmount);
-        // mint our eth balance
-        lETH.mint{ value: address(this).balance }();
-        lETH.transfer(data.user, lETH.balanceOf(address(this)));
-        _finalBal = lETH.balanceOf(address(this));
-      } else {
-        lTokenMapping[data.tokenToLoop].mint(data.tokenToLoop.balanceOf(address(this)));
-        lTokenMapping[data.tokenToLoop].transfer(data.user, lTokenMapping[data.tokenToLoop].balanceOf(address(this)));
-        _finalBal = lTokenMapping[data.tokenToLoop].balanceOf(address(this));
-      }
+      lTokenMapping[data.tokenToLoop].mint(data.tokenToLoop.balanceOf(address(this)));
+      lTokenMapping[data.tokenToLoop].transfer(data.user, lTokenMapping[data.tokenToLoop].balanceOf(address(this)));
+      _finalBal = lTokenMapping[data.tokenToLoop].balanceOf(address(this));
 
       emit lTokenBalance(_finalBal);
       require(_finalBal == 0, "lToken balance not 0 at the end of loop");
     }
 
-    if (data.tokenToLoop == ETH) {
-      // call leth specifically because it's special:
-      lETH.borrowBehalf(data.borrowedAmount, data.user);
-      WETH.deposit{ value: data.borrowedAmount }();
-      // ensure we pay the loan back with weth
-      WETH.transferFrom(address(this), msg.sender, data.borrowedAmount);
-    } else {
-      // call borrowBehalf to borrow tokens on behalf of user
-      lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
-      // repay loan, where msg.sender = vault
-      data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
-    }
+    // call borrowBehalf to borrow tokens on behalf of user
+    lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
+    // repay loan, where msg.sender = vault
+    data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
   }
 
   function getNotionalLoanAmountIn1e18(
@@ -251,8 +226,4 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     }
   }
 
-  // we need this in order to receive ether back to the contract
-  receive() external payable {
-    emit Received(msg.sender, msg.value);
-  }
 }

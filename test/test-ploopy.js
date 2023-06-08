@@ -14,6 +14,9 @@ console.log("--------------------------------------");
 console.log("Executing test-ploopy.js script");
 console.log("--------------------------------------");
 
+// MAJORITY OF TESTING WAS DONE ON MAINNET
+// SUCCESSFUL TRANSACTION: https://arbiscan.io/tx/0xdf4260cc5cd9530bdafe6ac5f86e25ab863ff47aac76ceda52fe1daddda961b2
+
 // Deployment related tests, mainly surrounding validating constructers are mapped properly.
 describe("Deployment", async function() {
     let ploopy;

@@ -2,7 +2,7 @@
 pragma solidity 0.8.17;
 
 import './interfaces/IVault.sol';
-import { IPloopy, ICERC20, Cether, WETHlike, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH } from './interfaces/Interfaces.sol';
+import { IPloopy, ICERC20, IGlpDepositor, IRewardRouterV2, IPriceOracleProxyETH } from './interfaces/Interfaces.sol';
 
 contract PloopyConstants {
   IVault internal constant BALANCER_VAULT = IVault(0xBA12222222228d8Ba445958a75a0704d566BF2C8);
@@ -12,11 +12,8 @@ contract PloopyConstants {
   IERC20 internal constant USDT = IERC20(0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9);
   IERC20 internal constant DAI = IERC20(0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1);
   IERC20 internal constant FRAX = IERC20(0x17FC002b466eEc40DaE837Fc4bE5c67993ddBd6F);
-  IERC20 internal constant ETH = IERC20(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
   IERC20 internal constant PLVGLP = IERC20(0x5326E71Ff593Ecc2CF7AcaE5Fe57582D6e74CFF1);
   IERC20 internal constant GLP = IERC20(0x1aDDD80E6039594eE970E5872D247bf0414C8903);
-
-  WETHlike internal constant WETH = WETHlike(0x82aF49447D8a07e3bd95BD0d56f35241523fBab1);
 
   // GMX
   IERC20 internal constant VAULT = IERC20(0x489ee077994B6658eAfA855C308275EAd8097C4A);
@@ -31,7 +28,6 @@ contract PloopyConstants {
 
   // LODESTAR
   ICERC20 internal constant lUSDC = ICERC20(0xF17C9D4062e2e652f81E43f9304EdDE3Fb3e63dB);
-  Cether internal constant lETH = Cether(0xf292a26B752D1A013dCCf0B1fEbEf2de251D3a4C);
   ICERC20 internal constant lPLVGLP = ICERC20(0xE728c318A6fD3b605726E810C2c542FD8056708c);
   IPriceOracleProxyETH internal constant PRICE_ORACLE =
     IPriceOracleProxyETH(0x911927A2E313E142FD92002f854483fF5a800b7e);
