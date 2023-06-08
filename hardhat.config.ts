@@ -1,7 +1,10 @@
-import { HardhatUserConfig } from 'hardhat/config';
+// import { HardhatUserConfig } from 'hardhat/config';
 import '@nomicfoundation/hardhat-toolbox';
-import * as dotenv from 'dotenv';
-dotenv.config();
+import {HardhatUserConfig} from 'hardhat/types';
+import * as dotenv from "dotenv";
+
+// Need some extra pathing guidance for hardhat to find our .env file
+dotenv.config({ path: __dirname+'/.env' });
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -27,6 +30,12 @@ const config: HardhatUserConfig = {
     ]
   },
   networks: {
+    hardhat: {
+      forking: {
+        url: 'https://api.avax.network/ext/bc/C/rpc'
+      },
+      gas: "auto"
+    },
     arbitrum: {
       url: process.env.ARB_RPC,
       accounts: [process.env.ARB_PK ?? '']

@@ -6,9 +6,10 @@ import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 interface IPloopy {
   struct UserData {
     address user;
-    uint256 plvGlpAmount;
+    uint256 tokenAmount;
     IERC20 borrowedToken;
     uint256 borrowedAmount;
+    IERC20 tokenToLoop; 
   }
 
   error UNAUTHORIZED(string);
@@ -36,6 +37,45 @@ interface IRewardRouterV2 {
 
 interface ICERC20Update {
   function borrowBehalf(uint256 borrowAmount, address borrowee) external returns (uint256);
+}
+
+interface WETHlike is IERC20 {
+  function withdraw(uint256 amount) external;
+  function withdrawTo(address account, uint256 amount) external;
+  function deposit() external payable;
+  function depositTo(address account) external payable;
+}
+
+interface Cether is IERC20, ICERC20Update {
+  // CToken
+  /**
+   * @notice Get the underlying balance of the `owner`
+   * @dev This also accrues interest in a transaction
+   * @param owner The address of the account to query
+   * @return The amount of underlying owned by `owner`
+   */
+  function balanceOfUnderlying(address owner) external returns (uint256);
+
+  /**
+   * @notice Returns the current per-block borrow interest rate for this cToken
+   * @return The borrow interest rate per block, scaled by 1e18
+   */
+  function borrowRatePerBlock() external view returns (uint256);
+
+  /**
+   * @notice Returns the current per-block supply interest rate for this cToken
+   * @return The supply interest rate per block, scaled by 1e18
+   */
+  function supplyRatePerBlock() external view returns (uint256);
+
+  /**
+   * @notice Accrue interest then return the up-to-date exchange rate
+   * @return Calculated exchange rate scaled by 1e18
+   */
+  function exchangeRateCurrent() external returns (uint256);
+
+  // Cether
+  function mint() external payable;
 }
 
 interface ICERC20 is IERC20, ICERC20Update {
@@ -71,5 +111,5 @@ interface ICERC20 is IERC20, ICERC20Update {
 }
 
 interface IPriceOracleProxyETH {
-  function getPlvGLPPrice() external view returns (uint256);
+  function getUnderlyingPrice(address cToken) external view returns (uint256);
 }
