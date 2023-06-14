@@ -169,9 +169,12 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
   ) external override nonReentrant {
     if (msg.sender != address(BALANCER_VAULT)) revert UNAUTHORIZED('balancer vault is not the sender');
 
-    // additional checks?
-
     UserData memory data = abi.decode(userData, (UserData));
+
+    // ensure the transaction is user originated
+    if (tx.origin != data.user) revert UNAUTHORIZED('user did not originate transaction');
+
+    // ensure we borrowed the proper amounts
     if (data.borrowedAmount != amounts[0] || data.borrowedToken != tokens[0]) revert FAILED('borrowed amounts and/or borrowed tokens do not match initially set values');
 
     // sanity check: flashloan has no fees
@@ -211,10 +214,16 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
       require(_finalBal == 0, "lToken balance not 0 at the end of loop");
     }
 
-    // call borrowBehalf to borrow tokens on behalf of user
-    lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
-    // repay loan, where msg.sender = vault
-    data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
+    if (data.tokenToLoop == PLVGLP) {
+      // plvGLP requires us to repay the loan with USDC
+      lUSDC.borrowBehalf(data.borrowedAmount, data.user);
+      USDC.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
+    } else {
+      // call borrowBehalf to borrow tokens on behalf of user
+      lTokenMapping[data.tokenToLoop].borrowBehalf(data.borrowedAmount, data.user);
+      // repay loan, where msg.sender = vault
+      data.tokenToLoop.safeTransferFrom(data.user, msg.sender, data.borrowedAmount);
+    }
   }
 
   function getNotionalLoanAmountIn1e18(
