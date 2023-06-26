@@ -137,11 +137,6 @@ contract Ploopy is IPloopy, PloopyConstants, Ownable, IFlashLoanRecipient, Reent
     emit Loan(loanAmount);
     emit BalanceOf(_tokenToBorrow.balanceOf(address(BALANCER_VAULT)), loanAmount);
 
-    // check approval to spend USDC (for paying back flashloan).
-    // possibly can omit to save gas as tx will fail with exceed allowance anyway.
-    if (_tokenToBorrow.allowance(msg.sender, address(this)) < loanAmount) revert INVALID_APPROVAL();
-    emit Allowance(_tokenToBorrow.allowance(msg.sender, address(this)), loanAmount);
-
     IERC20[] memory tokens = new IERC20[](1);
     tokens[0] = _tokenToBorrow;
 
